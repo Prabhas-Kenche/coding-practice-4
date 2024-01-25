@@ -26,17 +26,26 @@ const initializeDBAndServer = async () => {
 }
 initializeDBAndServer()
 
+const convertDbObjectToResponseObject = dbObject => {
+  return {
+    playerId: dbObject.player_id,
+    playerName: dbObject.player_name,
+    jerseyNumber: dbObject.jersey_number,
+    role: dbObject.role,
+  }
+}
+
 //API 1
 app.get('/players/', async (request, response) => {
-  const getListPlayers = `
-        SELECT
-        *
-        FROM
-        cricket_team
-        ORDER BY
-        player_id;`
-  const playerList = await db.all(getListPlayers)
-  response.send(playerList)
+  const getPlayersQuery = `
+    SELECT
+    *
+    FROM
+    cricket_team;`
+  const playersArray = await db.all(getPlayersQuery)
+  response.send(
+    playersArray.map(eachPlayer => convertDbObjectToResponseObject(eachPlayer)),
+  )
 })
 
 // API - 2
@@ -55,7 +64,7 @@ app.post('/players/', async (request, response) => {
       );`
   const dbResponse = await db.run(addPlayerQuery)
   const playerId = dbResponse.lastID
-  response.send({player_id: playerId})
+  response.send('Player Added to Team')
 })
 
 //API - 3
@@ -68,8 +77,8 @@ app.get('/players/:playerId/', async (request, response) => {
   cricket_team
   WHERE
   player_id = ${playerId};`
-  const player = await db.get(getPlayerQuery)
-  response.send(player)
+  const playersArray = await db.get(getPlayerQuery)
+  response.send(playersArray)
 })
 
 //API - 4
@@ -105,3 +114,4 @@ app.delete('/players/:playerId/', async (request, response) => {
 })
 
 module.exports = app
+
